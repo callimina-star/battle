@@ -220,6 +220,7 @@ hr{border:0;border-top:1px solid #0d0b09;box-shadow:0 1px 0 rgba(255,235,200,.1)
     <div class="top-right">
       <span class="live" id="live"><i></i><span>Connecting</span></span>
       <span class="role" id="role">Player</span>
+      <button class="btn sm primary" id="saveGame" hidden>Save Game</button>
       <button class="btn sm" id="roleToggle" hidden></button>
     </div>
   </header>
@@ -249,6 +250,7 @@ hr{border:0;border-top:1px solid #0d0b09;box-shadow:0 1px 0 rgba(255,235,200,.1)
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="/shim.js"></script>
 <script>
 (function(){
@@ -396,12 +398,16 @@ function rollInit(id){
   const t = tokById(id); if(!t || !canEdit(t)) return;
   const d = 1 + Math.floor(Math.random()*20), total = d + t.mod;
   patchToken(id, {init:total});
-  toast(t.name + ' rolled ' + total + ' (d20 ' + d + (t.mod < 0 ? ' - ' : ' + ') + Math.abs(t.mod) + ')');
+  const rollMsg = t.name + ' rolled ' + total + ' (d20 ' + d + (t.mod < 0 ? ' - ' : ' + ') + Math.abs(t.mod) + ')';
+  toast(rollMsg);
+  if(window.__btRoll) window.__btRoll(rollMsg);
   renderAll();
 }
 function rollAll(){
   const todo = S.tokens.filter(t => t.init === null);
-  todo.forEach(t => patchToken(t.id, {init:1 + Math.floor(Math.random()*20) + t.mod}));
+  const rolled = [];
+  todo.forEach(t => { const v = 1 + Math.floor(Math.random()*20) + t.mod; rolled.push(t.name + ' ' + v); patchToken(t.id, {init:v}); });
+  if(todo.length && window.__btRoll) window.__btRoll('Initiative: ' + rolled.join(', '));
   toast(todo.length ? 'Rolled initiative for ' + todo.length + ' token' + (todo.length === 1 ? '' : 's') + '.' : 'Everyone has already rolled.');
   renderAll();
 }
@@ -513,6 +519,7 @@ function renderTop(){
   live.className = 'live ' + (S.offline ? '' : S.bad ? 'bad' : S.linked ? 'on' : '');
   live.querySelector('span').textContent = S.offline ? 'Preview only' : S.bad ? 'Reconnecting' : S.linked ? 'Live' : 'Connecting';
   const role = $('#role'); role.textContent = S.isDM ? 'Dungeon Master' : 'Player'; role.className = 'role' + (S.isDM ? ' dm' : '');
+  $('#saveGame').hidden = !S.isDM;
   const tg = $('#roleToggle'); tg.hidden = !S.canDM;
   tg.textContent = S.dmView ? 'Preview as player' : 'Back to DM view';
 }
@@ -939,6 +946,21 @@ panel.addEventListener('keydown', e => {
 });
 panel.addEventListener('focusout', () => {
   setTimeout(() => { if(S.panelDirty && !panel.contains(document.activeElement)) renderPanel(); }, 0);
+});
+
+/* ---------- Supabase hooks ---------- */
+window.__btOnRoll = msg => { if(msg) toast(msg); };
+window.__btOnLoaded = at => {
+  let when = '';
+  try { when = ' from ' + new Date(at).toLocaleString(); } catch(e){}
+  toast('Loaded the last saved game' + when + '.');
+};
+$('#saveGame').addEventListener('click', async () => {
+  if(!window.__btSave || !S.isDM) return;
+  const b = $('#saveGame'); b.disabled = true;
+  try { await window.__btSave(); toast('Game saved.'); }
+  catch(e){ toast('Save failed: ' + ((e && e.message) || 'check your connection and the game_states table.')); }
+  b.disabled = false;
 });
 
 /* ---------- boot ---------- */
