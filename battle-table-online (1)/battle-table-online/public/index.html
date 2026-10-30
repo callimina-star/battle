@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Battle Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: a tavern table. Plank wood fills the page, a stone slab holds the map, a second slab holds the side panel, and a parchment strip carries the turn order. One committed dark look, lit by candle glow at the top corners. */
+:root{
+  color-scheme:dark;
+  --wood:#2c1a0f; --stone:#383531; --stone-hi:#5d584f; --stone-lo:#14110e;
+  --parch:#d8c7a0; --parch-2:#c6b388; --parch-ink:#2a1c0c;
+  --text:#ece1c8; --muted:#b9ab8c;
+  --gold:#e8c25e; --gold-dim:#c39a45; --accent:#f2b04a; --accent-ink:#201504;
+  --wax:#7a2218; --wax-hi:#a8352a;
+  --ok:#6fc08a; --warn:#e0b04a; --crit:#e5705f;
+  --ring-pc:#e8c25e; --ring-ally:#7fd09a; --ring-foe:#e5604f;
+  --t-floor:#aca28d; --t-wall:#2d2a26; --t-door:#7b4a23; --t-water:#2f5f7d; --t-rough:#7c7358; --t-hazard:#6e2a1d;
+  --font-display:'Cinzel','Trajan Pro',Georgia,serif;
+  --font-small:'Alegreya SC',Georgia,serif;
+  --font-body:'Alegreya Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --tex-wood-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='540'%3E%3Cfilter id='w' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.003 0.16' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .52 0 0 0 0 .32 0 0 0 0 .16 0 0 0 1.6 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
+  --tex-wood-pores:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='540'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008 0.7' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .05 0 0 0 0 .02 0 0 0 0 .01 0 0 0 1.5 -.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  --tex-stone:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03' numOctaves='4' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .8 0 0 0 0 .77 0 0 0 0 .7 0 0 0 1.05 -.42'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  --tex-stone-fine:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='8' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .04 0 0 0 0 .03 0 0 0 0 .02 0 0 0 2 -.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  --tex-parch:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='a' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035' numOctaves='4' seed='6' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .33 0 0 0 0 .14 0 0 0 1.7 -.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box}
+body{
+  min-height:100vh;
+  color:var(--text);font:17px/1.4 var(--font-body);
+  background-color:var(--wood);
+  background-image:
+    radial-gradient(ellipse 55% 38% at 6% 0%, rgba(255,170,80,.24), transparent 70%),
+    radial-gradient(ellipse 55% 38% at 94% 0%, rgba(255,170,80,.18), transparent 70%),
+    radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(0,0,0,.55) 100%),
+    repeating-linear-gradient(180deg, transparent 0 176px, rgba(6,3,1,.85) 176px 179px, rgba(255,205,150,.07) 179px 180px),
+    var(--tex-wood-pores), var(--tex-wood-grain);
+  background-size:auto,auto,auto,auto,400px 540px,640px 540px;
+  padding-block:20px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.app{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{position:relative;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 20px;padding-bottom:14px}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,var(--gold-dim),rgba(195,154,69,.15) 70%,transparent)}
+.brand{display:flex;align-items:center;gap:14px}
+.d20{width:52px;height:52px;flex:none;filter:drop-shadow(0 3px 3px rgba(0,0,0,.65))}
+h1{font:700 36px/1 var(--font-display);letter-spacing:.08em;margin:0;color:var(--gold);text-shadow:0 2px 0 #000,0 0 22px rgba(240,170,60,.3)}
+.sub{margin-top:8px;color:var(--parch-2);font:500 16px var(--font-body);letter-spacing:.04em;text-shadow:0 1px 0 rgba(0,0,0,.7)}
+.top-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.role{font:700 13px var(--font-small);letter-spacing:.14em;text-transform:uppercase;padding:5px 11px;background:linear-gradient(#4b453d,#2f2a24);color:var(--parch);border:1px solid #000;box-shadow:inset 0 1px 0 rgba(255,235,200,.2),0 2px 4px rgba(0,0,0,.55)}
+.role.dm{background:linear-gradient(var(--wax-hi),var(--wax));color:var(--gold)}
+.live{display:inline-flex;align-items:center;gap:7px;font:700 13px var(--font-small);letter-spacing:.1em;text-transform:uppercase;color:var(--parch-2);text-shadow:0 1px 0 rgba(0,0,0,.7)}
+.live i{width:9px;height:9px;border-radius:50%;background:#7a7060;display:inline-block;box-shadow:inset 0 1px 1px rgba(255,255,255,.3)}
+.live.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.live.bad i{background:var(--crit);box-shadow:0 0 8px var(--crit)}
+
+.btn{background:linear-gradient(#5d564b,#3a352d);border:1px solid #100d0a;color:var(--text);padding:7px 14px;border-radius:3px;line-height:1.1;font:700 15px var(--font-body);min-height:38px;text-shadow:0 1px 0 rgba(0,0,0,.65);box-shadow:inset 0 1px 0 rgba(255,235,200,.2),0 2px 3px rgba(0,0,0,.5)}
+.btn:hover{filter:brightness(1.14)}
+.btn:active{transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(0,0,0,.55)}
+.btn.primary{background:linear-gradient(#e3b957,#a67a26);border-color:#3a2808;color:var(--accent-ink);text-shadow:0 1px 0 rgba(255,236,170,.55)}
+.btn.danger{background:linear-gradient(#80301f,#4f160f);border-color:#240805;color:#ffd9cf}
+.btn.danger.armed{background:linear-gradient(#cc4332,#8a1f14);color:#fff}
+.btn[disabled]{opacity:.45;cursor:not-allowed;filter:grayscale(.5)}
+.btn.sm{padding:5px 10px;min-height:32px;font-size:14px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:22px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:minmax(0,1fr)}}
+.stage{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+.combatbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:12px 18px;border:1px solid #3a2a14;border-radius:3px;color:var(--parch-ink);
+  background:var(--tex-parch),var(--parch);
+  box-shadow:inset 0 0 24px rgba(95,55,18,.6),0 8px 16px rgba(0,0,0,.55)}
+.combatbar.running{box-shadow:inset 0 0 24px rgba(95,55,18,.6),0 0 0 2px var(--accent),0 0 26px rgba(242,176,74,.45),0 8px 16px rgba(0,0,0,.55)}
+.round{font:700 13px var(--font-small);letter-spacing:.18em;text-transform:uppercase;color:#6b5230}
+.round b{display:block;font:700 36px/1 var(--font-display);letter-spacing:0;color:var(--parch-ink);margin-top:2px}
+.upnow{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 190px}
+.upnow small{display:block;font:700 13px var(--font-small);letter-spacing:.18em;text-transform:uppercase;color:var(--wax-hi)}
+.upnow strong{font:700 23px/1.1 var(--font-display);letter-spacing:.03em;overflow-wrap:anywhere;color:var(--parch-ink)}
+.idle{color:#5a4326;font-style:italic;flex:1 1 200px}
+.cb-actions{display:flex;flex-wrap:wrap;gap:8px}
+
+.tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.seg{display:inline-flex;border:1px solid #100d0a;border-radius:3px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.5)}
+.seg button{border:0;background:linear-gradient(#5d564b,#3a352d);color:var(--text);padding:7px 16px;min-height:38px;font:700 15px var(--font-body);text-shadow:0 1px 0 rgba(0,0,0,.65);box-shadow:inset 0 1px 0 rgba(255,235,200,.2)}
+.seg button+button{border-left:1px solid #100d0a}
+.seg button[aria-pressed="true"]{background:linear-gradient(#e3b957,#a67a26);color:var(--accent-ink);text-shadow:0 1px 0 rgba(255,236,170,.55)}
+.scale{margin-left:auto;font:700 14px var(--font-small);letter-spacing:.1em;text-transform:uppercase;color:var(--parch-2);text-shadow:0 1px 0 rgba(0,0,0,.7)}
+.brushes{display:flex;flex-wrap:wrap;gap:6px}
+.brush{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border:1px solid #100d0a;background:linear-gradient(#4d473e,#312d26);border-radius:3px;min-height:34px;font:700 14px var(--font-body);color:var(--text);box-shadow:inset 0 1px 0 rgba(255,235,200,.15),0 2px 3px rgba(0,0,0,.45)}
+.brush[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 10px rgba(232,194,94,.35)}
+.sw{width:20px;height:20px;border:1px solid rgba(0,0,0,.65);display:inline-block;box-shadow:inset 0 1px 2px rgba(255,255,255,.25)}
+.sw.floor{background:var(--t-floor)} .sw.wall{background:var(--t-wall)} .sw.door{background:var(--t-door)}
+.sw.water{background:var(--t-water)} .sw.rough{background:var(--t-rough)} .sw.hazard{background:var(--t-hazard)}
+
+.board{padding:14px;display:flex;justify-content:center;border:2px solid #0d0b09;border-radius:3px;
+  background:var(--tex-stone-fine),var(--tex-stone),var(--stone);
+  box-shadow:inset 0 0 0 2px var(--stone-hi),inset 0 0 0 5px #17140f,inset 0 0 46px rgba(0,0,0,.6),0 16px 30px rgba(0,0,0,.65)}
+.board svg{width:100%;height:auto;max-height:82vh;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.glabel{font:700 14px var(--font-display);fill:#a99d83}
+.gridline{stroke:rgba(18,12,6,.5);stroke-width:1.5;fill:none}
+.mapframe{fill:none;stroke:#0b0907;stroke-width:7}
+.mapframe-in{fill:none;stroke:rgba(232,194,94,.35);stroke-width:1}
+.c-floor.f0{fill:#aaa08b} .c-floor.f1{fill:#b4aa95} .c-floor.f2{fill:#a29882} .c-floor.f3{fill:#b9af99}
+.c-wall{fill:var(--t-wall)} .c-water{fill:var(--t-water)} .c-rough{fill:var(--t-rough)} .c-hazard{fill:var(--t-hazard)}
+.has-bg .c-floor{fill:transparent}
+.has-bg .c-wall,.has-bg .c-water,.has-bg .c-rough,.has-bg .c-hazard{fill-opacity:.6}
+.has-bg .ov{opacity:.65}
+.p-brick{stroke:#0d0b09;stroke-width:1.8;fill:none}
+.p-wave{stroke:#8cc4e4;stroke-width:2;fill:none;opacity:.8}
+.p-dot{fill:#4a432e}
+.p-stripe{stroke:#f0a43a;stroke-width:4}
+.gr-d{fill:rgba(0,0,0,.16)} .gr-l{fill:rgba(255,246,222,.14)}
+.crack{stroke:rgba(30,20,10,.55);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.door-leaf{fill:var(--t-door);stroke:#1a0e05;stroke-width:2}
+.door-plank{stroke:#2e1a0a;stroke-width:1.4;fill:none}
+.door-knob{fill:#e8c25e;stroke:#3a2808;stroke-width:1}
+.tok{cursor:grab}
+.tok.nomove{cursor:pointer}
+.tok .shadow{fill:rgba(0,0,0,.5)}
+.tok .shine{pointer-events:none}
+.tok .edge{fill:none;stroke-width:3.5}
+.tok.pc .edge{stroke:var(--ring-pc)}
+.tok.ally .edge{stroke:var(--ring-ally);stroke-dasharray:2 5;stroke-linecap:round}
+.tok.foe .edge{stroke:var(--ring-foe);stroke-dasharray:7 4}
+.tok .ini{text-anchor:middle;font-family:var(--font-display);font-weight:700;pointer-events:none}
+.tok.down .body{opacity:.35}
+.tok.down .ini{opacity:.5}
+.tok.hid{opacity:.5}
+.tok .x{stroke:var(--crit);stroke-width:4;stroke-linecap:round}
+.hpback{fill:rgba(0,0,0,.6)}
+.hp-ok{fill:var(--ok)} .hp-mid{fill:var(--warn)} .hp-low{fill:var(--crit)}
+.selring{fill:none;stroke:#fff;stroke-width:2;stroke-dasharray:3 3}
+.turnring{fill:none;stroke:var(--accent);stroke-width:4;filter:drop-shadow(0 0 6px var(--accent));animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{stroke-opacity:.4}50%{stroke-opacity:1}}
+@media (prefers-reduced-motion:reduce){.turnring{animation:none}}
+.mline{stroke:var(--accent);stroke-width:3;stroke-dasharray:8 6;fill:none;filter:drop-shadow(0 0 3px rgba(0,0,0,.8))}
+.mdot{fill:var(--accent);stroke:#201504;stroke-width:2}
+.mbox{fill:var(--parch);stroke:#3a2a14;stroke-width:1.5}
+.mtext{fill:var(--parch-ink);font:700 15px var(--font-display);text-anchor:middle}
+
+.under{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;font-size:15px;color:var(--parch-2);text-shadow:0 1px 0 rgba(0,0,0,.75)}
+.key{display:inline-flex;align-items:center;gap:7px}
+.key svg{width:22px;height:22px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.7))}
+.sel{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:16px;min-height:38px;color:var(--text);text-shadow:0 1px 0 rgba(0,0,0,.75)}
+.sel b{font:700 19px var(--font-display);letter-spacing:.04em;color:var(--gold)}
+.sel .mono{font:700 14px var(--font-small);letter-spacing:.1em;text-transform:uppercase;color:var(--parch-2)}
+
+.side{border:2px solid #0d0b09;border-radius:3px;min-width:0;
+  background:var(--tex-stone-fine),var(--tex-stone),var(--stone);
+  box-shadow:inset 0 0 0 2px var(--stone-hi),inset 0 0 0 5px #17140f,0 16px 30px rgba(0,0,0,.65)}
+.tabs{display:flex;margin:7px 7px 0;background:rgba(0,0,0,.4);box-shadow:inset 0 2px 5px rgba(0,0,0,.65),0 1px 0 rgba(255,235,200,.1)}
+.tabs button{flex:1;background:transparent;border:0;border-bottom:3px solid transparent;padding:13px 8px 10px;font:700 15px var(--font-display);letter-spacing:.1em;color:var(--muted);text-shadow:0 1px 0 rgba(0,0,0,.8)}
+.tabs button:hover{color:var(--text)}
+.tabs button[aria-selected="true"]{color:var(--gold);border-bottom-color:var(--gold);background:linear-gradient(rgba(255,235,200,.08),transparent)}
+.pane{padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.notice{padding:10px 12px;border:1px solid #3a2a14;color:var(--parch-ink);font-size:15px;background:var(--tex-parch),var(--parch);box-shadow:inset 0 0 14px rgba(95,55,18,.5)}
+.hint{color:var(--muted);font-size:15px;margin:0;text-shadow:0 1px 0 rgba(0,0,0,.7)}
+.hint b{color:var(--gold);font-family:var(--font-body)}
+h2{font:700 14px var(--font-small);letter-spacing:.2em;text-transform:uppercase;margin:0;color:var(--gold-dim);text-shadow:0 1px 0 rgba(0,0,0,.8)}
+.row-actions{display:flex;flex-wrap:wrap;gap:8px}
+
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid #0d0b09;box-shadow:inset 0 2px 6px rgba(0,0,0,.55),0 1px 0 rgba(255,235,200,.1);background:rgba(0,0,0,.25)}
+.list li{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:6px 11px;align-items:center;padding:9px 11px;border-left:4px solid transparent}
+.list li+li{border-top:1px solid #0d0b09;box-shadow:inset 0 1px 0 rgba(255,235,200,.06)}
+.list li.is-turn{border-left-color:var(--accent);background:linear-gradient(90deg,rgba(242,176,74,.3),rgba(242,176,74,.07))}
+.list li.is-sel{box-shadow:inset 0 0 0 2px var(--gold-dim)}
+.list li.is-down .who b{text-decoration:line-through;opacity:.6}
+.who{min-width:0}
+.who b{display:block;font:700 17px/1.15 var(--font-display);letter-spacing:.03em;overflow-wrap:anywhere;color:var(--text)}
+.who small{font:700 12px var(--font-small);color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.who small em{font-style:normal;color:var(--accent)}
+.chip{width:36px;height:36px;border-radius:50%;border:3px solid var(--ring-pc);background:var(--c);color:var(--fg);font:700 12px var(--font-display);padding:0;display:grid;place-items:center;box-shadow:0 2px 3px rgba(0,0,0,.65),inset 0 -5px 7px rgba(0,0,0,.35),inset 0 3px 5px rgba(255,255,255,.35)}
+.chip.ally{border:3px dotted var(--ring-ally)}
+.chip.foe{border:3px dashed var(--ring-foe)}
+.nums{display:flex;gap:8px;align-items:flex-end}
+.num{display:flex;flex-direction:column;gap:2px;font:700 11px var(--font-small);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.num input,.num .val{width:58px;padding:5px 6px;border:1px solid #000;background:#16120f;border-radius:2px;font:700 17px var(--font-body);font-variant-numeric:lining-nums tabular-nums;color:var(--text);text-align:center;min-height:34px;box-shadow:inset 0 2px 4px rgba(0,0,0,.75),0 1px 0 rgba(255,235,200,.12)}
+.num .val{border-color:transparent;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center}
+.mx{font:700 14px var(--font-body);color:var(--muted)}
+
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field>span{font:700 12px var(--font-small);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-shadow:0 1px 0 rgba(0,0,0,.7)}
+.field input[type=text],.field input[type=number],.field select,.field textarea{padding:8px 11px;border:1px solid #000;background:#16120f;color:var(--text);border-radius:2px;min-height:40px;width:100%;font-variant-numeric:lining-nums tabular-nums;box-shadow:inset 0 2px 4px rgba(0,0,0,.75),0 1px 0 rgba(255,235,200,.12)}
+.field input[type=file]{color:var(--muted);font-size:14px}
+.field textarea{font:700 16px/1.15 'Courier New',ui-monospace,monospace;min-height:150px;resize:vertical;white-space:pre;letter-spacing:.14em}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px}
+.swatches{display:flex;flex-wrap:wrap;gap:7px}
+.swatch{width:32px;height:32px;border-radius:50%;border:2px solid #0d0b09;padding:0;background:var(--c);box-shadow:0 2px 3px rgba(0,0,0,.6),inset 0 -5px 7px rgba(0,0,0,.3),inset 0 3px 5px rgba(255,255,255,.35)}
+.swatch[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 2px #0d0b09,0 0 0 4px var(--gold),0 0 12px rgba(232,194,94,.5)}
+.check{display:flex;align-items:center;gap:9px;min-height:36px;font-weight:500}
+.check input{width:19px;height:19px;accent-color:var(--gold-dim)}
+hr{border:0;border-top:1px solid #0d0b09;box-shadow:0 1px 0 rgba(255,235,200,.1);margin:0;width:100%}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:linear-gradient(#2a2520,#16120f);color:var(--text);border:1px solid var(--gold-dim);padding:11px 18px;border-radius:3px;max-width:min(92vw,520px);font-size:16px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s;box-shadow:0 8px 20px rgba(0,0,0,.65)}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+
+<style>html,body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg class="d20" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="d20g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4d686"/><stop offset="1" stop-color="#8f6a22"/></linearGradient></defs><polygon points="24,3 43,14 43,34 24,45 5,34 5,14" fill="url(#d20g)" stroke="#2a1c06" stroke-width="2" stroke-linejoin="round"/><polygon points="24,12 36,32 12,32" fill="none" stroke="#2a1c06" stroke-width="1.8" stroke-linejoin="round"/><path d="M24 3V12M43 14L36 32M5 14L12 32M24 45L12 32M24 45L36 32M43 34L36 32M5 34L12 32" stroke="#2a1c06" stroke-width="1.5" fill="none"/><text x="24" y="28.5" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="9" fill="#2a1c06">20</text></svg>
+      <div>
+        <h1>Battle Table</h1>
+        <div class="sub" id="sub">Loading the map</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <span class="live" id="live"><i></i><span>Connecting</span></span>
+      <span class="role" id="role">Player</span>
+      <button class="btn sm primary" id="saveGame" hidden>Save Game</button>
+      <button class="btn sm" id="roleToggle" hidden></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="stage" aria-label="Map">
+      <div class="combatbar" id="combatbar"></div>
+      <div class="tools" id="tools"></div>
+      <div class="brushes" id="brushes" hidden></div>
+      <div class="board" id="board">
+        <svg id="svg" role="img" aria-label="Battle map grid"></svg>
+      </div>
+      <div class="sel" id="sel"></div>
+      <div class="under" id="keys">
+        <span class="key"><svg viewBox="-12 -12 24 24"><circle r="9" fill="none" stroke="var(--ring-pc)" stroke-width="3"/></svg>Player character</span>
+        <span class="key"><svg viewBox="-12 -12 24 24"><circle r="9" fill="none" stroke="var(--ring-ally)" stroke-width="3" stroke-dasharray="2 5" stroke-linecap="round"/></svg>Ally</span>
+        <span class="key"><svg viewBox="-12 -12 24 24"><circle r="9" fill="none" stroke="var(--ring-foe)" stroke-width="3" stroke-dasharray="7 4"/></svg>Foe</span>
+        <span class="key" style="margin-left:auto">Drag a token to move it. Arrow keys move the selected token.</span>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="pane" id="panel"></div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="/shim.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ---------- constants ---------- */
+const CELL = 64, PAD = 28;
+const TERRAIN = [['.','Floor','floor'],['#','Wall','wall'],['D','Door','door'],['~','Water','water'],['r','Rough ground','rough'],['^','Hazard','hazard']];
+const T_OK = {}; TERRAIN.forEach(t => T_OK[t[0]] = t[2]);
+const SWATCHES = ['#3b82c4','#2f9e8f','#6aa84f','#e0a526','#d9693a','#c8434f','#a45bb5','#7a6fd0','#8d99a6','#d1dae0'];
+const DEFAULT_MAP = {
+  name:'Cellar Crossing', cols:10, ft:5,
+  rows:['##########','#....#...#','#....D...#','#..r.#...#','##D###D###','#~~~...r.#','#~~~.....#','#~~..##D##','#..^.#...#','##########']
+};
+
+/* ---------- state ---------- */
+const S = {
+  map: DEFAULT_MAP, hasMap:false, bg:null,
+  tokens:[], combat:{active:false, round:1, turnId:null},
+  uid:null, canDM:false, canWrite:null, dmView:true, isDM:false,
+  offline:false, linked:false, bad:false,
+  tool:'move', brush:'#', sel:null, tab:'init',
+  measure:null, drag:null, paint:null, confirm:null,
+  panelDirty:false, stageDirty:false,
+  form:{name:'', kind:'pc', color:SWATCHES[0], hp:'10', mod:'0', qty:'1', ascii:'', cols:'', rows:''}
+};
+let db = null;
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (n,a,b) => Math.max(a, Math.min(b, n));
+const num = (v,d) => { const n = parseInt(v,10); return Number.isFinite(n) ? n : (d === undefined ? 0 : d); };
+const colLabel = i => i < 26 ? String.fromCharCode(65+i) : String.fromCharCode(64+Math.floor(i/26)) + String.fromCharCode(65+i%26);
+const cellName = (c,r) => colLabel(c) + (r+1);
+function textOn(hex){
+  const n = parseInt(hex.slice(1),16), r = n>>16, g = (n>>8)&255, b = n&255;
+  return (0.299*r + 0.587*g + 0.114*b) > 150 ? '#111820' : '#ffffff';
+}
+function initials(name){
+  const p = String(name).trim().split(/\s+/).filter(Boolean);
+  if(!p.length) return '?';
+  const last = p[p.length-1];
+  if(p.length > 1 && /^\d{1,2}$/.test(last)) return (p[0][0] + last).toUpperCase();
+  if(p.length > 1) return (p[0][0] + p[1][0]).toUpperCase();
+  return p[0].slice(0,2).toUpperCase();
+}
+let toastTimer;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+function fail(e){
+  S.bad = true;
+  const code = e && e.code;
+  if(code === 'invalid_argument') toast('The table did not accept that change.');
+  else if(code === 'quota_exceeded') toast('The table is full. Remove some tokens first.');
+  else toast('That change did not save. Try again in a moment.');
+  renderTop();
+}
+const queues = new Map();
+function enqueue(key, fn){
+  const prev = queues.get(key) || Promise.resolve();
+  const next = prev.catch(() => {}).then(fn).catch(fail);
+  queues.set(key, next);
+  return next;
+}
+
+/* ---------- normalisers (shared data is untrusted) ---------- */
+function normMap(d){
+  let rows = Array.isArray(d && d.rows) ? d.rows.map(String).slice(0,40) : [];
+  if(!rows.length) return DEFAULT_MAP;
+  const cols = clamp(Math.max.apply(null, rows.map(r => r.length)), 1, 40);
+  rows = rows.map(r => r.slice(0,cols).split('').map(ch => T_OK[ch] ? ch : '.').join('').padEnd(cols,'.'));
+  return {name:String(d.name || 'Untitled map').slice(0,60), cols, rows, ft:clamp(num(d.ft,5),1,100)};
+}
+function normToken(id,d){
+  return {
+    id, name:String(d.name || 'Token').slice(0,40),
+    kind:['pc','ally','foe'].indexOf(d.kind) >= 0 ? d.kind : 'pc',
+    color:/^#[0-9a-fA-F]{6}$/.test(d.color || '') ? d.color : '#8d99a6',
+    c:num(d.c), r:num(d.r), hp:num(d.hp), maxHp:num(d.maxHp),
+    init:(d.init === null || d.init === undefined || d.init === '') ? null : num(d.init),
+    mod:num(d.mod), owner:d.owner || null, hidden:!!d.hidden, at:num(d.at)
+  };
+}
+
+/* ---------- domain ---------- */
+const tokById = id => S.tokens.find(t => t.id === id);
+const isDown = t => t.maxHp > 0 && t.hp <= 0;
+const canPlay = () => !S.offline && !!S.uid && S.canWrite !== false;
+const canEdit = t => canPlay() && (S.isDM || (t.kind === 'pc' && t.owner === S.uid));
+const canMove = canEdit;
+const visibleTokens = () => S.isDM ? S.tokens : S.tokens.filter(t => !t.hidden);
+function order(){
+  return visibleTokens().filter(t => t.init !== null).sort((a,b) =>
+    b.init - a.init || b.mod - a.mod || a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+}
+function fullOrder(){ // includes hidden foes, used to step the turn
+  return S.tokens.filter(t => t.init !== null).sort((a,b) =>
+    b.init - a.init || b.mod - a.mod || a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+}
+const activeToken = () => S.combat.active ? tokById(S.combat.turnId) : null;
+const mapRows = () => S.paint ? S.paint.rows.map(r => r.join('')) : S.map.rows;
+
+function writeCombat(p){
+  if(!db) return;
+  const next = Object.assign({}, S.combat, p);
+  S.combat = next; renderAll();
+  return enqueue('combat', () => db.doc('combat/state').set({active:!!next.active, round:next.round, turnId:next.turnId || null}));
+}
+function startCombat(){
+  const all = fullOrder().filter(t => !isDown(t));
+  if(!all.length){ toast('Roll initiative for at least one token first.'); return; }
+  writeCombat({active:true, round:1, turnId:all[0].id});
+}
+function endCombat(){ writeCombat({active:false, round:1, turnId:null}); }
+function stepTurn(dir){
+  const all = fullOrder(); if(!all.length) return;
+  let i = all.findIndex(t => t.id === S.combat.turnId);
+  let round = S.combat.round || 1;
+  for(let n = 0; n < all.length; n++){
+    i = i < 0 ? (dir > 0 ? 0 : all.length-1) : i + dir;
+    if(i >= all.length){ i = 0; round++; }
+    if(i < 0){ i = all.length-1; round = Math.max(1, round-1); }
+    if(!isDown(all[i])) return writeCombat({active:true, round, turnId:all[i].id});
+  }
+  toast('Everyone in the order is down.');
+}
+function patchToken(id, p){
+  if(!db) return;
+  const t = tokById(id);
+  if(t) Object.assign(t, p);
+  return enqueue('t:'+id, () => db.doc('tokens/'+id).update(p));
+}
+function moveToken(id, c, r){
+  const t = tokById(id); if(!t || !canMove(t)) return;
+  if(c < 0 || r < 0 || c >= S.map.cols || r >= S.map.rows.length) return;
+  if(!S.isDM && S.map.rows[r][c] === '#'){ toast('A wall is in the way.'); return; }
+  if(t.c === c && t.r === r) return;
+  patchToken(id, {c, r});
+  renderAll();
+}
+function rollInit(id){
+  const t = tokById(id); if(!t || !canEdit(t)) return;
+  const d = 1 + Math.floor(Math.random()*20), total = d + t.mod;
+  patchToken(id, {init:total});
+  const rollMsg = t.name + ' rolled ' + total + ' (d20 ' + d + (t.mod < 0 ? ' - ' : ' + ') + Math.abs(t.mod) + ')';
+  toast(rollMsg);
+  if(window.__btRoll) window.__btRoll(rollMsg);
+  renderAll();
+}
+function rollAll(){
+  const todo = S.tokens.filter(t => t.init === null);
+  const rolled = [];
+  todo.forEach(t => { const v = 1 + Math.floor(Math.random()*20) + t.mod; rolled.push(t.name + ' ' + v); patchToken(t.id, {init:v}); });
+  if(todo.length && window.__btRoll) window.__btRoll('Initiative: ' + rolled.join(', '));
+  toast(todo.length ? 'Rolled initiative for ' + todo.length + ' token' + (todo.length === 1 ? '' : 's') + '.' : 'Everyone has already rolled.');
+  renderAll();
+}
+function clearInit(){
+  S.tokens.forEach(t => { if(t.init !== null) patchToken(t.id, {init:null}); });
+  if(S.combat.active) endCombat();
+  renderAll();
+}
+function freeCell(used){
+  const rows = S.map.rows;
+  for(let r = 0; r < rows.length; r++) for(let c = 0; c < S.map.cols; c++){
+    const ch = rows[r][c];
+    if(ch !== '#' && ch !== '~' && !used.has(c+','+r)) return {c, r};
+  }
+  return {c:0, r:0};
+}
+async function addTokens(){
+  if(!canPlay()){ toast('You need Contributor access to add tokens.'); return; }
+  const f = S.form, name = (f.name || '').trim().slice(0,32);
+  if(!name){ toast('Give the token a name first.'); return; }
+  const kind = S.isDM ? f.kind : 'pc';
+  const qty = S.isDM && kind !== 'pc' ? clamp(num(f.qty,1),1,12) : 1;
+  const hp = clamp(num(f.hp,0),0,999), mod = clamp(num(f.mod,0),-10,20);
+  const used = new Set(S.tokens.map(t => t.c+','+t.r));
+  let lastId = null;
+  for(let i = 0; i < qty; i++){
+    const cell = freeCell(used); used.add(cell.c+','+cell.r);
+    const ref = db.collection('tokens').doc(); lastId = ref.id;
+    const data = {name:qty > 1 ? name + ' ' + (i+1) : name, kind, color:f.color, c:cell.c, r:cell.r, hp, maxHp:hp, init:null, mod, owner:S.uid, hidden:false, at:Date.now() + i};
+    await enqueue('t:'+ref.id, () => ref.set(data));
+  }
+  S.form.name = ''; S.sel = lastId;
+  toast(qty > 1 ? 'Added ' + qty + ' tokens.' : 'Added ' + name + '.');
+  renderAll();
+}
+function removeToken(id){
+  if(!db) return;
+  if(S.combat.active && S.combat.turnId === id) stepTurn(1);
+  S.tokens = S.tokens.filter(t => t.id !== id);
+  if(S.sel === id) S.sel = null;
+  enqueue('t:'+id, () => db.doc('tokens/'+id).delete());
+  renderAll();
+}
+function select(id){ S.sel = id; renderStage(); renderPanel(); }
+
+/* ---------- map editing (DM) ---------- */
+function mapDoc(p){ return Object.assign({name:S.map.name, cols:S.map.cols, rows:S.map.rows, ft:S.map.ft}, p || {}); }
+function writeMap(p){
+  if(!db || !S.isDM) return;
+  const doc = mapDoc(p);
+  doc.cols = Math.max.apply(null, doc.rows.map(r => r.length));
+  S.map = normMap(doc); S.hasMap = true; renderAll();
+  return enqueue('map', () => db.doc('map/current').set(doc));
+}
+function resizeMap(cols, rows){
+  cols = clamp(cols,3,40); rows = clamp(rows,3,40);
+  const out = [];
+  for(let r = 0; r < rows; r++){
+    const old = S.map.rows[r] || '';
+    out.push(old.slice(0,cols).padEnd(cols,'.'));
+  }
+  writeMap({rows:out, cols});
+  toast('Map is now ' + cols + ' × ' + rows + '.');
+}
+function loadAscii(text){
+  let lines = String(text).replace(/\r/g,'').split('\n');
+  while(lines.length && !lines[0].trim()) lines.shift();
+  while(lines.length && !lines[lines.length-1].trim()) lines.pop();
+  if(!lines.length){ toast('Paste a map first. Each line is one row of squares.'); return; }
+  let cropped = lines.length > 40 || lines.some(l => l.length > 40);
+  lines = lines.slice(0,40).map(l => l.slice(0,40));
+  const cols = Math.max.apply(null, lines.map(l => l.length));
+  const rows = lines.map(l => l.split('').map(ch => T_OK[ch] ? ch : '.').join('').padEnd(cols,'.'));
+  writeMap({rows, cols});
+  toast('Loaded a ' + cols + ' × ' + rows.length + ' map.' + (cropped ? ' It was cropped to 40 squares.' : ''));
+}
+function handleBg(file){
+  if(!file || !db) return;
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = () => {
+    let scale = Math.min(1, 1000 / Math.max(img.width, img.height)), q = 0.8, out = '';
+    for(let tries = 0; tries < 12; tries++){
+      const cv = document.createElement('canvas');
+      cv.width = Math.max(1, Math.round(img.width*scale)); cv.height = Math.max(1, Math.round(img.height*scale));
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      out = cv.toDataURL('image/jpeg', q);
+      if(out.length < 235000) break;
+      if(q > 0.5) q -= 0.1; else scale *= 0.8;
+    }
+    URL.revokeObjectURL(url);
+    if(out.length >= 240000){ toast('That image is too detailed to store. Try a smaller one.'); return; }
+    S.bg = out; renderAll();
+    enqueue('bg', () => db.doc('mapbg/current').set({dataUrl:out}));
+    toast('Map image set. It stretches to fit the grid.');
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('That file could not be read as an image.'); };
+  img.src = url;
+}
+function paintAt(p){
+  if(!S.paint || p.c < 0 || p.r < 0 || p.c >= S.map.cols || p.r >= S.map.rows.length) return;
+  if(S.paint.rows[p.r][p.c] !== S.brush){ S.paint.rows[p.r][p.c] = S.brush; S.paint.dirty = true; renderStage(true); }
+}
+
+/* ---------- rendering: top ---------- */
+function renderTop(){
+  const m = S.map;
+  $('#sub').textContent = m.name + '  ·  ' + m.cols + ' × ' + m.rows.length + '  ·  1 square = ' + m.ft + ' ft';
+  const live = $('#live');
+  live.className = 'live ' + (S.offline ? '' : S.bad ? 'bad' : S.linked ? 'on' : '');
+  live.querySelector('span').textContent = S.offline ? 'Preview only' : S.bad ? 'Reconnecting' : S.linked ? 'Live' : 'Connecting';
+  const role = $('#role'); role.textContent = S.isDM ? 'Dungeon Master' : 'Player'; role.className = 'role' + (S.isDM ? ' dm' : '');
+  $('#saveGame').hidden = !S.isDM;
+  const tg = $('#roleToggle'); tg.hidden = !S.canDM;
+  tg.textContent = S.dmView ? 'Preview as player' : 'Back to DM view';
+}
+
+/* ---------- rendering: stage ---------- */
+function layoutTokens(list){
+  const groups = {};
+  list.forEach(t => {
+    const c = clamp(t.c,0,S.map.cols-1), r = clamp(t.r,0,S.map.rows.length-1);
+    (groups[c+','+r] = groups[c+','+r] || []).push({t,c,r});
+  });
+  const out = [];
+  Object.keys(groups).forEach(k => {
+    const arr = groups[k].sort((a,b) => a.t.id.localeCompare(b.t.id)), n = arr.length;
+    arr.forEach((o,i) => {
+      const cx = o.c*CELL + CELL/2, cy = o.r*CELL + CELL/2;
+      if(n === 1) out.push({t:o.t, x:cx, y:cy, rad:25});
+      else { const off = [[-15,-15],[15,-15],[-15,15],[15,15]][i%4]; out.push({t:o.t, x:cx+off[0], y:cy+off[1], rad:15}); }
+    });
+  });
+  return out;
+}
+function tokenSVG(L){
+  const t = L.t, r = L.rad, down = isDown(t);
+  const active = S.combat.active && S.combat.turnId === t.id, sel = S.sel === t.id;
+  const fg = textOn(t.color);
+  let hp = '';
+  if(t.maxHp > 0){
+    const w = r*1.5, ratio = clamp(t.hp/t.maxHp,0,1), cls = ratio > .5 ? 'hp-ok' : ratio > .25 ? 'hp-mid' : 'hp-low', y = r*0.5;
+    hp = '<rect class="hpback" x="'+(-w/2)+'" y="'+y+'" width="'+w+'" height="'+(r > 20 ? 6 : 4)+'" rx="2"/>' +
+         '<rect class="'+cls+'" x="'+(-w/2)+'" y="'+y+'" width="'+(w*ratio)+'" height="'+(r > 20 ? 6 : 4)+'" rx="2"/>';
+  }
+  const cross = down ? '<path class="x" d="M'+(-r*.6)+' '+(-r*.6)+'L'+(r*.6)+' '+(r*.6)+'M'+(r*.6)+' '+(-r*.6)+'L'+(-r*.6)+' '+(r*.6)+'"/>' : '';
+  const label = t.name + ' (' + cellName(t.c,t.r) + ')' + (t.maxHp > 0 ? ', HP ' + t.hp + '/' + t.maxHp : '') + (t.init !== null ? ', initiative ' + t.init : '');
+  return '<g class="tok '+t.kind+(down?' down':'')+(t.hidden?' hid':'')+(canMove(t)?'':' nomove')+'" data-tid="'+esc(t.id)+'" data-x="'+L.x+'" data-y="'+L.y+'" transform="translate('+L.x+' '+L.y+')">' +
+    '<circle class="shadow" cx="3" cy="5" r="'+r+'"/>' +
+    (active ? '<circle class="turnring" r="'+(r+7)+'"/>' : '') +
+    (sel ? '<circle class="selring" r="'+(r+4)+'"/>' : '') +
+    '<circle class="body" r="'+r+'" fill="'+t.color+'"/>' +
+    '<circle class="shine" r="'+r+'" fill="url(#g-shine)"/>' +
+    '<circle class="edge" r="'+r+'"/>' +
+    '<text class="ini" fill="'+fg+'" font-size="'+(r*0.7)+'" y="'+(t.maxHp > 0 ? -r*0.08 : 0)+'" dy=".35em">'+esc(initials(t.name))+'</text>' +
+    hp + cross + '<title>'+esc(label)+'</title></g>';
+}
+function cellGlyphs(rows, cols, nrows){
+  let base = '', over = '';
+  const ch = (c,r) => (rows[r] || '')[c] || '#';
+  for(let r = 0; r < nrows; r++) for(let c = 0; c < cols; c++){
+    const k = ch(c,r), x = c*CELL, y = r*CELL, floor = (k === '.' || k === 'D');
+    const cls = floor ? 'c-floor f'+((c*7 + r*13 + c*r) % 4) : 'c-'+(T_OK[k] || 'floor');
+    const box = 'x="'+x+'" y="'+y+'" width="'+CELL+'" height="'+CELL+'"';
+    base += '<rect class="'+cls+'" '+box+'/>';
+    if(k === '#') over += '<rect class="ov" '+box+' fill="url(#p-brick)"/>';
+    else if(k === '~') over += '<rect class="ov" '+box+' fill="url(#p-wave)"/>';
+    else if(k === 'r') over += '<rect class="ov" '+box+' fill="url(#p-dot)"/>';
+    else if(k === '^') over += '<rect class="ov" '+box+' fill="url(#p-stripe)"/>';
+    else if(floor && (c*31 + r*17) % 11 === 0)
+      over += '<path class="crack ov" d="M'+(x+9)+' '+(y+13)+'l9 6 -3 10 10 7 -2 9"/>';
+    if(k === 'D'){
+      const horiz = ch(c-1,r) === '#' && ch(c+1,r) === '#';
+      over += horiz
+        ? '<rect class="door-leaf" x="'+(x+5)+'" y="'+(y+22)+'" width="54" height="20" rx="2"/><path class="door-plank" d="M'+(x+20)+' '+(y+22)+'v20M'+(x+34)+' '+(y+22)+'v20M'+(x+47)+' '+(y+22)+'v20"/><circle class="door-knob" cx="'+(x+52)+'" cy="'+(y+32)+'" r="3"/>'
+        : '<rect class="door-leaf" x="'+(x+22)+'" y="'+(y+5)+'" width="20" height="54" rx="2"/><path class="door-plank" d="M'+(x+22)+' '+(y+20)+'h20M'+(x+22)+' '+(y+34)+'h20M'+(x+22)+' '+(y+47)+'h20"/><circle class="door-knob" cx="'+(x+32)+'" cy="'+(y+52)+'" r="3"/>';
+    }
+  }
+  return base + over;
+}
+function svgHTML(){
+  const rows = mapRows(), cols = S.map.cols, nrows = rows.length, W = cols*CELL, H = nrows*CELL;
+  let s = '<defs>' +
+    '<pattern id="p-brick" width="32" height="32" patternUnits="userSpaceOnUse"><path class="p-brick" d="M0 0H32M0 16H32M0 0V16M16 0V16M8 16V32M24 16V32"/></pattern>' +
+    '<pattern id="p-wave" width="32" height="20" patternUnits="userSpaceOnUse"><path class="p-wave" d="M0 6q8 -6 16 0t16 0M0 16q8 -6 16 0t16 0"/></pattern>' +
+    '<pattern id="p-dot" width="22" height="22" patternUnits="userSpaceOnUse"><circle class="p-dot" cx="5" cy="6" r="2.2"/><circle class="p-dot" cx="16" cy="13" r="2.8"/><circle class="p-dot" cx="9" cy="19" r="1.6"/></pattern>' +
+    '<pattern id="p-stripe" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path class="p-stripe" d="M0 0V14"/></pattern>' +
+    '<pattern id="p-grain" width="64" height="64" patternUnits="userSpaceOnUse">' +
+      '<circle class="gr-d" cx="6" cy="9" r="1.6"/><circle class="gr-l" cx="21" cy="4" r="1.3"/><circle class="gr-d" cx="40" cy="14" r="2"/><circle class="gr-l" cx="55" cy="8" r="1.4"/>' +
+      '<circle class="gr-l" cx="12" cy="29" r="1.8"/><circle class="gr-d" cx="31" cy="26" r="1.3"/><circle class="gr-d" cx="50" cy="33" r="1.7"/><circle class="gr-l" cx="60" cy="24" r="1.2"/>' +
+      '<circle class="gr-d" cx="9" cy="48" r="2"/><circle class="gr-l" cx="27" cy="44" r="1.5"/><circle class="gr-l" cx="44" cy="52" r="1.9"/><circle class="gr-d" cx="58" cy="58" r="1.4"/><circle class="gr-d" cx="20" cy="60" r="1.3"/>' +
+    '</pattern>' +
+    '<radialGradient id="g-shine" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></radialGradient>' +
+    '</defs>';
+  if(S.bg) s += '<image href="'+S.bg+'" x="0" y="0" width="'+W+'" height="'+H+'" preserveAspectRatio="none"/>';
+  s += cellGlyphs(rows, cols, nrows);
+  if(!S.bg) s += '<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#p-grain)" pointer-events="none"/>';
+  let g = '';
+  for(let c = 0; c <= cols; c++) g += 'M'+(c*CELL)+' 0V'+H;
+  for(let r = 0; r <= nrows; r++) g += 'M0 '+(r*CELL)+'H'+W;
+  s += '<path class="gridline" d="'+g+'"/>';
+  s += '<rect class="mapframe" x="-3.5" y="-3.5" width="'+(W+7)+'" height="'+(H+7)+'"/><rect class="mapframe-in" x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'"/>';
+  for(let c = 0; c < cols; c++) s += '<text class="glabel" x="'+(c*CELL+CELL/2)+'" y="-12" text-anchor="middle">'+colLabel(c)+'</text>';
+  for(let r = 0; r < nrows; r++) s += '<text class="glabel" x="-13" y="'+(r*CELL+CELL/2+5)+'" text-anchor="end">'+(r+1)+'</text>';
+  layoutTokens(visibleTokens()).forEach(L => { s += tokenSVG(L); });
+  if(S.measure){
+    const a = S.measure.a, b = S.measure.b;
+    const ax = a.c*CELL+CELL/2, ay = a.r*CELL+CELL/2, bx = b.c*CELL+CELL/2, by = b.r*CELL+CELL/2;
+    const sq = Math.max(Math.abs(a.c-b.c), Math.abs(a.r-b.r)), txt = sq + ' sq · ' + (sq*S.map.ft) + ' ft';
+    const mx = (ax+bx)/2, my = (ay+by)/2, w = txt.length*10 + 20;
+    s += '<line class="mline" x1="'+ax+'" y1="'+ay+'" x2="'+bx+'" y2="'+by+'"/><circle class="mdot" cx="'+ax+'" cy="'+ay+'" r="6"/><circle class="mdot" cx="'+bx+'" cy="'+by+'" r="6"/>' +
+         '<rect class="mbox" x="'+(mx-w/2)+'" y="'+(my-36)+'" width="'+w+'" height="28" rx="3"/><text class="mtext" x="'+mx+'" y="'+(my-17)+'">'+txt+'</text>';
+  }
+  return s;
+}
+function renderStage(force){
+  if(S.drag && !force){ S.stageDirty = true; return; }
+  const svg = $('#svg'), cols = S.map.cols, nrows = mapRows().length;
+  svg.setAttribute('viewBox', (-PAD)+' '+(-PAD)+' '+(cols*CELL+PAD*2)+' '+(nrows*CELL+PAD*2));
+  svg.setAttribute('class', S.bg ? 'has-bg' : '');
+  svg.style.maxWidth = Math.max(320, cols*64 + 2*PAD) + 'px';
+  svg.innerHTML = svgHTML();
+  renderCombatBar(); renderTools(); renderSel(); renderTop();
+}
+function chipHTML(t, cls){
+  return '<span class="chip '+t.kind+(cls ? ' '+cls : '')+'" style="--c:'+t.color+';--fg:'+textOn(t.color)+'">'+esc(initials(t.name))+'</span>';
+}
+function renderCombatBar(){
+  const el = $('#combatbar'), c = S.combat, at = activeToken(), n = order().length;
+  el.className = 'combatbar' + (c.active ? ' running' : '');
+  let h = '';
+  if(c.active){
+    const mine = at && (S.isDM || (canPlay() && at.owner === S.uid));
+    h += '<div class="round">Round<b>'+c.round+'</b></div>';
+    h += at ? '<div class="upnow">'+chipHTML(at)+'<div><small>Up now</small><strong>'+esc(at.name)+'</strong></div></div>'
+            : '<div class="idle">The token whose turn it was has left the battle. Press Next turn.</div>';
+    h += '<div class="cb-actions">';
+    if(S.isDM) h += '<button class="btn" data-cb="prev">Previous</button><button class="btn primary" data-cb="next">Next turn</button><button class="btn danger" data-cb="end">End battle</button>';
+    else if(mine) h += '<button class="btn primary" data-cb="next">End my turn</button>';
+    h += '</div>';
+  } else {
+    h += '<div class="round">Round<b>–</b></div>';
+    if(S.isDM) h += '<div class="idle">'+(n ? n + ' in the initiative order. Start when everyone is ready.' : 'No battle running. Add tokens and roll initiative in the panel to begin.')+'</div><div class="cb-actions"><button class="btn primary" data-cb="start"'+(n ? '' : ' disabled')+'>Start battle</button></div>';
+    else h += '<div class="idle">'+(n ? 'Initiative is set. Waiting for the DM to start the battle.' : 'No battle running. Add your character and roll initiative when the DM calls for it.')+'</div>';
+  }
+  el.innerHTML = h;
+}
+function renderTools(){
+  const el = $('#tools'), b = $('#brushes');
+  let h = '<div class="seg" role="group" aria-label="Map tool">' +
+    '<button data-tool="move" aria-pressed="'+(S.tool === 'move')+'">Move</button>' +
+    '<button data-tool="measure" aria-pressed="'+(S.tool === 'measure')+'">Measure</button>' +
+    (S.isDM ? '<button data-tool="paint" aria-pressed="'+(S.tool === 'paint')+'">Paint terrain</button>' : '') + '</div>';
+  if(S.measure && S.tool === 'measure') h += '<button class="btn sm" data-tool="clearm">Clear ruler</button>';
+  h += '<span class="scale">1 square = '+S.map.ft+' ft</span>';
+  el.innerHTML = h;
+  b.hidden = !(S.isDM && S.tool === 'paint');
+  if(!b.hidden) b.innerHTML = TERRAIN.map(t => '<button class="brush" data-brush="'+t[0]+'" aria-pressed="'+(S.brush === t[0])+'"><span class="sw '+t[2]+'"></span>'+t[1]+'</button>').join('');
+}
+function renderSel(){
+  const t = tokById(S.sel), el = $('#sel');
+  if(!t || (t.hidden && !S.isDM)){ el.innerHTML = '<span class="mono">Select a token to see its details.</span>'; return; }
+  el.innerHTML = chipHTML(t) + '<b>'+esc(t.name)+'</b><span class="mono">'+cellName(t.c,t.r)+(t.maxHp > 0 ? '  ·  HP '+t.hp+'/'+t.maxHp : '')+(t.init !== null ? '  ·  Init '+t.init : '')+'</span>' +
+    (canEdit(t) ? '<button class="btn sm" data-sel="edit">Edit</button>' : '');
+}
+
+/* ---------- rendering: side panel ---------- */
+function renderTabs(){
+  const tabs = [['init','Initiative'],['tokens','Tokens']].concat(S.isDM ? [['map','Map']] : []);
+  if(!tabs.some(t => t[0] === S.tab)) S.tab = 'init';
+  $('#tabs').innerHTML = tabs.map(t => '<button role="tab" data-tab="'+t[0]+'" aria-selected="'+(S.tab === t[0])+'">'+t[1]+'</button>').join('');
+}
+function numBox(label, t, field, val, editable, extra){
+  if(editable) return '<label class="num"><span>'+label+'</span><input type="number" inputmode="numeric" data-tid="'+esc(t.id)+'" data-field="'+field+'" value="'+(val === null ? '' : val)+'" aria-label="'+label+' for '+esc(t.name)+'"></label>'+(extra || '');
+  return '<div class="num"><span>'+label+'</span><div class="val">'+(val === null ? '–' : val)+'</div></div>'+(extra || '');
+}
+function rowHTML(t){
+  const down = isDown(t), turn = S.combat.active && S.combat.turnId === t.id, ed = canEdit(t);
+  const kind = {pc:'Player', ally:'Ally', foe:'Foe'}[t.kind];
+  return '<li class="'+(turn ? 'is-turn ' : '')+(S.sel === t.id ? 'is-sel ' : '')+(down ? 'is-down' : '')+'">' +
+    '<button class="chip '+t.kind+'" data-act="select" data-tid="'+esc(t.id)+'" style="--c:'+t.color+';--fg:'+textOn(t.color)+'" aria-label="Select '+esc(t.name)+'">'+esc(initials(t.name))+'</button>' +
+    '<div class="who"><b>'+esc(t.name)+'</b><small>'+kind+(turn ? ' · <em>up now</em>' : '')+(down ? ' · down' : '')+(t.hidden ? ' · hidden' : '')+'</small></div>' +
+    '<div class="nums">' +
+      numBox('Init', t, 'init', t.init, ed) +
+      (t.maxHp > 0 ? numBox('HP', t, 'hp', t.hp, ed, '<span class="mx">/'+t.maxHp+'</span>') : '') +
+      (ed ? '<button class="btn sm" data-act="roll" data-tid="'+esc(t.id)+'" aria-label="Roll initiative for '+esc(t.name)+'">Roll</button>' : '') +
+    '</div></li>';
+}
+function initPane(){
+  const all = order(), rest = visibleTokens().filter(t => t.init === null).sort((a,b) => a.at - b.at);
+  let h = '';
+  if(S.isDM){
+    h += '<div class="row-actions"><button class="btn sm" data-act="rollAll">Roll for everyone unrolled</button>' +
+         '<button class="btn sm danger'+(S.confirm === 'clearInit' ? ' armed' : '')+'" data-act="clearInit">'+(S.confirm === 'clearInit' ? 'Confirm clear' : 'Clear initiative')+'</button></div>';
+  }
+  h += '<h2>Turn order</h2>';
+  h += all.length ? '<ul class="list">'+all.map(rowHTML).join('')+'</ul>' : '<p class="hint">Nobody has rolled yet. Add tokens, then press Roll next to a name.</p>';
+  if(rest.length) h += '<h2>Waiting to roll</h2><ul class="list">'+rest.map(rowHTML).join('')+'</ul>';
+  if(!S.tokens.length) h += '<p class="hint">The table is empty. Open the Tokens tab to add a character.</p>';
+  return h;
+}
+function swatchRow(scope, current, id){
+  return '<div class="swatches" role="group" aria-label="Token color">' + SWATCHES.map(c =>
+    '<button class="swatch" data-act="swatch" data-scope="'+scope+'" data-color="'+c+'"'+(id ? ' data-tid="'+esc(id)+'"' : '')+' style="--c:'+c+'" aria-pressed="'+(current === c)+'" aria-label="Color '+c+'"></button>').join('') + '</div>';
+}
+function tokensPane(){
+  const f = S.form;
+  let h = '';
+  if(S.canWrite === false) h += '<div class="notice">You can watch this battle, but adding or moving tokens needs Contributor access. Ask the DM to share the page with that level.</div>';
+  h += '<h2>'+(S.isDM ? 'Add tokens' : 'Add your character')+'</h2>';
+  h += '<label class="field"><span>Name</span><input type="text" id="f-name" data-form="name" maxlength="32" value="'+esc(f.name)+'" placeholder="'+(S.isDM && f.kind !== 'pc' ? 'Goblin' : 'Thorin')+'" autocomplete="off"></label>';
+  h += '<div class="fields">';
+  if(S.isDM) h += '<label class="field"><span>Side</span><select id="f-kind" data-form="kind"><option value="pc"'+(f.kind === 'pc' ? ' selected' : '')+'>Player</option><option value="ally"'+(f.kind === 'ally' ? ' selected' : '')+'>Ally</option><option value="foe"'+(f.kind === 'foe' ? ' selected' : '')+'>Foe</option></select></label>';
+  h += '<label class="field"><span>Hit points</span><input type="number" inputmode="numeric" id="f-hp" data-form="hp" value="'+esc(f.hp)+'" min="0" max="999"></label>';
+  h += '<label class="field"><span>Init bonus</span><input type="number" inputmode="numeric" id="f-mod" data-form="mod" value="'+esc(f.mod)+'" min="-10" max="20"></label>';
+  if(S.isDM && f.kind !== 'pc') h += '<label class="field"><span>How many</span><input type="number" inputmode="numeric" id="f-qty" data-form="qty" value="'+esc(f.qty)+'" min="1" max="12"></label>';
+  h += '</div>';
+  h += '<div class="field"><span>Color</span>'+swatchRow('form', f.color)+'</div>';
+  h += '<button class="btn primary" data-act="addToken"'+(canPlay() ? '' : ' disabled')+'>Place on map</button>';
+  h += '<hr>';
+  const t = tokById(S.sel);
+  if(t && (S.isDM || !t.hidden)){
+    const ed = canEdit(t);
+    h += '<h2>Selected token</h2>';
+    if(!ed) h += '<p class="hint">'+esc(t.name)+' belongs to someone else. Only they and the DM can change it.</p>';
+    else {
+      h += '<label class="field"><span>Name</span><input type="text" data-tid="'+esc(t.id)+'" data-field="name" maxlength="40" value="'+esc(t.name)+'"></label>';
+      h += '<div class="fields">' +
+        '<label class="field"><span>HP now</span><input type="number" inputmode="numeric" data-tid="'+esc(t.id)+'" data-field="hp" value="'+t.hp+'"></label>' +
+        '<label class="field"><span>HP max</span><input type="number" inputmode="numeric" data-tid="'+esc(t.id)+'" data-field="maxHp" value="'+t.maxHp+'"></label>' +
+        '<label class="field"><span>Init bonus</span><input type="number" inputmode="numeric" data-tid="'+esc(t.id)+'" data-field="mod" value="'+t.mod+'"></label>' +
+        '<label class="field"><span>Initiative</span><input type="number" inputmode="numeric" data-tid="'+esc(t.id)+'" data-field="init" value="'+(t.init === null ? '' : t.init)+'"></label></div>';
+      h += '<div class="field"><span>Color</span>'+swatchRow('token', t.color, t.id)+'</div>';
+      if(S.isDM){
+        h += '<label class="field"><span>Side</span><select data-tid="'+esc(t.id)+'" data-field="kind"><option value="pc"'+(t.kind === 'pc' ? ' selected' : '')+'>Player</option><option value="ally"'+(t.kind === 'ally' ? ' selected' : '')+'>Ally</option><option value="foe"'+(t.kind === 'foe' ? ' selected' : '')+'>Foe</option></select></label>';
+        h += '<label class="check"><input type="checkbox" data-tid="'+esc(t.id)+'" data-field="hidden"'+(t.hidden ? ' checked' : '')+'> Hide from players</label>';
+      }
+      h += '<div class="row-actions"><button class="btn sm danger'+(S.confirm === t.id ? ' armed' : '')+'" data-act="remove" data-tid="'+esc(t.id)+'">'+(S.confirm === t.id ? 'Confirm remove' : 'Remove token')+'</button></div>';
+    }
+  } else h += '<p class="hint">Tap a token on the map or in the initiative list to edit it.</p>';
+  return h;
+}
+function mapPane(){
+  const f = S.form;
+  if(!f.cols) f.cols = String(S.map.cols);
+  if(!f.rows) f.rows = String(S.map.rows.length);
+  let h = '<label class="field"><span>Map name</span><input type="text" data-map="name" maxlength="60" value="'+esc(S.map.name)+'"></label>';
+  h += '<div class="fields"><label class="field"><span>Columns</span><input type="number" inputmode="numeric" data-form="cols" min="3" max="40" value="'+esc(f.cols)+'"></label>' +
+       '<label class="field"><span>Rows</span><input type="number" inputmode="numeric" data-form="rows" min="3" max="40" value="'+esc(f.rows)+'"></label>' +
+       '<label class="field"><span>Feet per square</span><input type="number" inputmode="numeric" data-map="ft" min="1" max="100" value="'+S.map.ft+'"></label></div>';
+  h += '<div class="row-actions"><button class="btn sm" data-act="applySize">Resize map</button></div>';
+  h += '<hr><h2>Load your own map</h2>';
+  h += '<p class="hint">One line per row, one character per square. <b>.</b> floor, <b>#</b> wall, <b>D</b> door, <b>~</b> water, <b>r</b> rough ground, <b>^</b> hazard. Up to 40 × 40. A 10 × 10 map is ten lines of ten characters.</p>';
+  h += '<label class="field"><span>Map text</span><textarea id="f-ascii" data-form="ascii" spellcheck="false" placeholder="##########&#10;#........#&#10;#...D....#">'+esc(f.ascii)+'</textarea></label>';
+  h += '<div class="row-actions"><button class="btn primary sm" data-act="loadAscii">Load map</button><button class="btn sm" data-act="copyAscii">Copy current map</button></div>';
+  h += '<hr><h2>Map image</h2>';
+  h += '<p class="hint">Upload a battle map picture. It stretches across the grid, so use an image that matches your columns and rows. Terrain you paint is drawn over it.</p>';
+  h += '<label class="field"><span>Image file</span><input type="file" id="bgfile" accept="image/*"></label>';
+  if(S.bg) h += '<div class="row-actions"><button class="btn sm danger" data-act="clearBg">Remove image</button></div>';
+  h += '<hr><h2>Table</h2>';
+  h += '<div class="row-actions"><button class="btn sm danger'+(S.confirm === 'clearTokens' ? ' armed' : '')+'" data-act="clearTokens">'+(S.confirm === 'clearTokens' ? 'Confirm remove all' : 'Remove all tokens')+'</button>' +
+       '<button class="btn sm danger'+(S.confirm === 'sampleMap' ? ' armed' : '')+'" data-act="sampleMap">'+(S.confirm === 'sampleMap' ? 'Confirm reset' : 'Reset to sample map')+'</button></div>';
+  h += '<hr><h2>Invite players</h2><p class="hint">Send friends this link. They need no account and can place and move their own character.</p><label class="field"><span>Player link</span><input type="text" readonly id="plink" value="'+esc(window.__btPlayerLink ? window.__btPlayerLink() : location.href)+'" onclick="this.select()"></label><p class="hint">Keep your DM link private. It is the only way to paint the map, move foes and run the battle.</p>';
+  return h;
+}
+function renderPanel(){
+  const a = document.activeElement, p = $('#panel');
+  if(a && p.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type !== 'file'){ S.panelDirty = true; return; }
+  S.panelDirty = false;
+  renderTabs();
+  let h = '';
+  if(S.offline) h += '<div class="notice">Could not reach the table server. Check your connection and reload the page.</div>';
+  else if(!S.uid && S.linked) h += '<div class="notice">Connecting to the table.</div>';
+  h += S.tab === 'tokens' ? tokensPane() : S.tab === 'map' && S.isDM ? mapPane() : initPane();
+  p.innerHTML = h;
+}
+function renderAll(){ renderStage(); renderPanel(); }
+
+/* ---------- events ---------- */
+const svg = $('#svg'), panel = $('#panel');
+function pt(e){
+  const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+  const q = p.matrixTransform(svg.getScreenCTM().inverse());
+  return {x:q.x, y:q.y, c:Math.floor(q.x/CELL), r:Math.floor(q.y/CELL)};
+}
+const inB = p => p.c >= 0 && p.r >= 0 && p.c < S.map.cols && p.r < S.map.rows.length;
+
+svg.addEventListener('pointerdown', e => {
+  if(e.button > 0) return;
+  const p = pt(e);
+  if(S.tool === 'paint' && S.isDM){
+    e.preventDefault(); svg.setPointerCapture(e.pointerId);
+    S.paint = {rows:S.map.rows.map(r => r.split('')), dirty:false}; S.painting = true; paintAt(p); return;
+  }
+  if(S.tool === 'measure'){
+    if(!inB(p)) return;
+    svg.setPointerCapture(e.pointerId);
+    S.measure = {a:{c:p.c,r:p.r}, b:{c:p.c,r:p.r}, live:true}; renderStage(); return;
+  }
+  const g = e.target.closest && e.target.closest('[data-tid]');
+  if(!g){ if(S.sel){ S.sel = null; renderStage(); renderPanel(); } return; }
+  const id = g.dataset.tid, t = tokById(id); if(!t) return;
+  if(S.sel !== id){ S.sel = id; renderStage(); renderPanel(); }
+  if(canMove(t)){
+    svg.setPointerCapture(e.pointerId);
+    const el = svg.querySelector('[data-tid="'+CSS.escape(id)+'"]');
+    if(el){ svg.appendChild(el); S.drag = {id, el, sx:p.x, sy:p.y, ox:+el.dataset.x, oy:+el.dataset.y, moved:false}; }
+  }
+});
+svg.addEventListener('pointermove', e => {
+  if(S.drag){
+    const p = pt(e), d = S.drag, dx = p.x - d.sx, dy = p.y - d.sy;
+    if(Math.abs(dx) + Math.abs(dy) > 5) d.moved = true;
+    d.el.setAttribute('transform', 'translate('+(d.ox+dx)+' '+(d.oy+dy)+')');
+  } else if(S.painting){ paintAt(pt(e)); }
+  else if(S.measure && S.measure.live){
+    const p = pt(e);
+    if(inB(p) && (p.c !== S.measure.b.c || p.r !== S.measure.b.r)){ S.measure.b = {c:p.c, r:p.r}; renderStage(); }
+  }
+});
+function endPointer(e, cancel){
+  if(S.drag){
+    const d = S.drag; S.drag = null;
+    const p = pt(e);
+    if(!cancel && d.moved && inB(p)) moveToken(d.id, p.c, p.r);
+    renderStage(true); return;
+  }
+  if(S.painting){
+    S.painting = false;
+    const pr = S.paint; S.paint = null;
+    if(pr && pr.dirty && !cancel) writeMap({rows:pr.rows.map(r => r.join(''))}); else renderStage(true);
+    return;
+  }
+  if(S.measure && S.measure.live){ S.measure.live = false; renderStage(); }
+}
+svg.addEventListener('pointerup', e => endPointer(e, false));
+svg.addEventListener('pointercancel', e => endPointer(e, true));
+
+document.addEventListener('keydown', e => {
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) return;
+  const t = tokById(S.sel); if(!t || !canMove(t)) return;
+  const d = {ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1]}[e.key];
+  if(!d) return;
+  e.preventDefault(); moveToken(t.id, t.c + d[0], t.r + d[1]);
+});
+
+$('#tools').addEventListener('click', e => {
+  const b = e.target.closest('[data-tool]'); if(!b) return;
+  const k = b.dataset.tool;
+  if(k === 'clearm'){ S.measure = null; } else { S.tool = k; if(k !== 'measure') S.measure = null; }
+  renderStage();
+});
+$('#brushes').addEventListener('click', e => {
+  const b = e.target.closest('[data-brush]'); if(!b) return;
+  S.brush = b.dataset.brush; renderTools();
+});
+$('#combatbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-cb]'); if(!b) return;
+  const k = b.dataset.cb;
+  if(k === 'start') startCombat();
+  else if(k === 'next'){ const at = activeToken(); if(S.isDM || (at && at.owner === S.uid)) stepTurn(1); }
+  else if(k === 'prev' && S.isDM) stepTurn(-1);
+  else if(k === 'end' && S.isDM) endCombat();
+});
+$('#sel').addEventListener('click', e => {
+  if(e.target.closest('[data-sel="edit"]')){ S.tab = 'tokens'; renderPanel(); $('#panel').scrollIntoView({block:'nearest', behavior:'smooth'}); }
+});
+$('#roleToggle').addEventListener('click', () => {
+  S.dmView = !S.dmView; S.isDM = S.canDM && S.dmView;
+  if(!S.isDM && S.tool === 'paint') S.tool = 'move';
+  S.form.kind = 'pc'; renderAll();
+});
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if(!b) return;
+  S.tab = b.dataset.tab; S.confirm = null; renderPanel();
+});
+
+panel.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const act = b.dataset.act, id = b.dataset.tid;
+  const arm = key => { if(S.confirm === key){ S.confirm = null; return true; } S.confirm = key; renderPanel(); return false; };
+  switch(act){
+    case 'select': select(id); break;
+    case 'roll': rollInit(id); break;
+    case 'rollAll': if(S.isDM) rollAll(); break;
+    case 'clearInit': if(S.isDM && arm('clearInit')) clearInit(); break;
+    case 'swatch':
+      if(b.dataset.scope === 'form'){ S.form.color = b.dataset.color; renderPanel(); }
+      else { const t = tokById(id); if(t && canEdit(t)){ patchToken(id, {color:b.dataset.color}); renderAll(); } }
+      break;
+    case 'addToken': addTokens(); break;
+    case 'remove': { const t = tokById(id); if(t && canEdit(t) && arm(id)) removeToken(id); break; }
+    case 'applySize': if(S.isDM) resizeMap(num(S.form.cols, S.map.cols), num(S.form.rows, S.map.rows.length)); S.form.cols = ''; S.form.rows = ''; break;
+    case 'loadAscii': if(S.isDM) loadAscii(S.form.ascii); S.form.cols = ''; S.form.rows = ''; break;
+    case 'copyAscii': {
+      const text = S.map.rows.join('\n'); S.form.ascii = text; renderPanel();
+      const done = () => toast('Map text copied. It is also in the box.');
+      const fallback = () => { const ta = $('#f-ascii'); if(ta){ ta.focus(); ta.select(); } toast('Map text is in the box. Copy it from there.'); };
+      try { navigator.clipboard.writeText(text).then(done, fallback); } catch(err){ fallback(); }
+      break;
+    }
+    case 'clearBg': if(S.isDM && db){ S.bg = null; renderAll(); enqueue('bg', () => db.doc('mapbg/current').delete()); } break;
+    case 'clearTokens': if(S.isDM && arm('clearTokens')){ S.combat.active && endCombat(); S.tokens.slice().forEach(t => enqueue('t:'+t.id, () => db.doc('tokens/'+t.id).delete())); S.tokens = []; S.sel = null; renderAll(); } break;
+    case 'sampleMap': if(S.isDM && arm('sampleMap')){ S.form.cols = ''; S.form.rows = ''; writeMap({name:DEFAULT_MAP.name, rows:DEFAULT_MAP.rows.slice(), ft:5}); } break;
+  }
+});
+panel.addEventListener('input', e => {
+  const f = e.target.dataset && e.target.dataset.form; if(!f) return;
+  S.form[f] = e.target.value;
+});
+panel.addEventListener('change', e => {
+  const el = e.target, d = el.dataset || {};
+  if(d.form === 'kind'){ S.form.kind = el.value; S.panelDirty = false; el.blur(); renderPanel(); return; }
+  if(d.map){
+    if(!S.isDM) return;
+    if(d.map === 'name'){ const v = el.value.trim().slice(0,60); if(v) writeMap({name:v}); }
+    if(d.map === 'ft') writeMap({ft:clamp(num(el.value,5),1,100)});
+    return;
+  }
+  if(el.id === 'bgfile'){ if(S.isDM) handleBg(el.files[0]); return; }
+  if(!d.field) return;
+  const t = tokById(d.tid); if(!t || !canEdit(t)) return;
+  const v = el.type === 'checkbox' ? el.checked : el.value;
+  switch(d.field){
+    case 'name': { const n = String(v).trim().slice(0,40); if(n) patchToken(t.id, {name:n}); break; }
+    case 'init': patchToken(t.id, {init:v === '' ? null : clamp(num(v),-20,60)}); break;
+    case 'hp': patchToken(t.id, {hp:clamp(num(v,t.hp), 0, t.maxHp > 0 ? t.maxHp : 999)}); break;
+    case 'maxHp': { const mh = clamp(num(v,t.maxHp),0,999); patchToken(t.id, {maxHp:mh, hp:mh > 0 ? Math.min(t.hp || mh, mh) : t.hp}); break; }
+    case 'mod': patchToken(t.id, {mod:clamp(num(v),-10,20)}); break;
+    case 'kind': if(S.isDM) patchToken(t.id, {kind:v}); break;
+    case 'hidden': if(S.isDM) patchToken(t.id, {hidden:!!v}); break;
+  }
+  renderAll();
+});
+panel.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'file') e.target.blur();
+});
+panel.addEventListener('focusout', () => {
+  setTimeout(() => { if(S.panelDirty && !panel.contains(document.activeElement)) renderPanel(); }, 0);
+});
+
+/* ---------- Supabase hooks ---------- */
+window.__btOnRoll = msg => { if(msg) toast(msg); };
+window.__btOnLoaded = at => {
+  let when = '';
+  try { when = ' from ' + new Date(at).toLocaleString(); } catch(e){}
+  toast('Loaded the last saved game' + when + '.');
+};
+$('#saveGame').addEventListener('click', async () => {
+  if(!window.__btSave || !S.isDM) return;
+  const b = $('#saveGame'); b.disabled = true;
+  try { await window.__btSave(); toast('Game saved.'); }
+  catch(e){ toast('Save failed: ' + ((e && e.message) || 'check your connection and the game_states table.')); }
+  b.disabled = false;
+});
+
+/* ---------- boot ---------- */
+function onErr(){ S.bad = true; renderTop(); }
+async function boot(){
+  S.isDM = false;
+  renderAll();
+  const use = window.claude && typeof window.claude.use === 'function' ? window.claude.use.bind(window.claude) : null;
+  if(!use){ S.offline = true; renderAll(); return; }
+  let u = null;
+  try { const r = await Promise.all([use('db'), use('user')]); db = r[0]; u = r[1]; } catch(e){ db = null; }
+  if(!db){ S.offline = true; renderAll(); return; }
+  if(u){
+    try { S.uid = await u.id(); } catch(e){}
+    try { S.canDM = !!(await u.canEdit()); } catch(e){}
+    try { const w = await u.can('data.write'); S.canWrite = w === null || w === undefined ? null : !!w; } catch(e){}
+  }
+  S.isDM = S.canDM && S.dmView;
+  S.linked = true; renderAll();
+
+  db.doc('map/current').onSnapshot(s => {
+    if(s.exists){ S.map = normMap(s.data()); S.hasMap = true; } else { S.map = DEFAULT_MAP; S.hasMap = false; }
+    S.form.cols = ''; S.form.rows = '';
+    if(!S.painting) renderAll();
+  }, onErr);
+  db.doc('mapbg/current').onSnapshot(s => {
+    const d = s.exists ? s.data() : null;
+    S.bg = d && typeof d.dataUrl === 'string' && d.dataUrl.indexOf('data:image/') === 0 ? d.dataUrl : null;
+    if(!S.painting) renderStage();
+  }, onErr);
+  db.collection('tokens').onSnapshot(q => {
+    S.bad = false;
+    S.tokens = q.docs.map(d => normToken(d.id, d.data() || {}));
+    if(S.sel && !tokById(S.sel)) S.sel = null;
+    renderAll();
+  }, onErr);
+  db.doc('combat/state').onSnapshot(s => {
+    const d = s.exists ? s.data() : null;
+    S.combat = d ? {active:!!d.active, round:Math.max(1, num(d.round,1)), turnId:d.turnId || null} : {active:false, round:1, turnId:null};
+    renderAll();
+  }, onErr);
+}
+boot();
+})();
+</script>
+
+</body>
+</html>
