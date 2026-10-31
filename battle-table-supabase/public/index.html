@@ -289,7 +289,7 @@ $('#create').addEventListener('click', async function(){
     var s = await sb.auth.getSession();
     if (!s.data.session) {
       var a = await sb.auth.signInAnonymously();
-      if (a.error) throw new Error('Turn on "Allow anonymous sign-ins" in Supabase under Authentication, then try again.');
+      if (a.error) throw new Error('Sign-in failed. Supabase says: "' + a.error.message + '". If it mentions anonymous sign-ins, turn that on under Authentication, Sign In / Providers, and press Save changes. If it mentions a key, recheck public/config.js.');
     }
     var id = slugify(name) + '-' + rand('abcdefghjkmnpqrstuvwxyz23456789', 4);
     var secret = rand('abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', 24);
