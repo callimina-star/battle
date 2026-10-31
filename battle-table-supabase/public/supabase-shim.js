@@ -247,7 +247,7 @@
       if (s.data && s.data.session) uid = s.data.session.user.id;
       else {
         var a = await sb.auth.signInAnonymously();
-        if (a.error) { showMsg('Sign-in is switched off', '<p>In Supabase, open Authentication, then Sign In / Providers, and turn on <b>Allow anonymous sign-ins</b>. Then reload this page.</p>'); return false; }
+        if (a.error) { showMsg('Could not sign you in', '<p>Supabase says: <b>' + String(a.error.message).replace(/[<>&]/g, '') + '</b></p><p>If it mentions anonymous sign-ins, open Authentication, then Sign In / Providers, turn on <b>Allow anonymous sign-ins</b> and press Save changes. If it mentions a key, recheck <b>config.js</b>. Then reload this page.</p>'); return false; }
         uid = a.data.user.id;
       }
       var h = /dm=([A-Za-z0-9_-]+)/.exec(location.hash);
